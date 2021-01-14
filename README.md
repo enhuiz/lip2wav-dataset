@@ -44,4 +44,4 @@ This collect the detections for each speaker/split and generate the detection fi
 python prepare.py detection/chem-test.csv
 ```
 
-This generate frames (if detected is skipped) and audios.
+This generate frames (if step 3 is skipped) and audios.
