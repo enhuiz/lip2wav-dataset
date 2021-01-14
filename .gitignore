@@ -1,0 +1,6 @@
+*sw*
+__pycache__
+Dataset/*/*
+!Dataset/*/*.txt
+Dataset/*/todo.txt
+tmp*
