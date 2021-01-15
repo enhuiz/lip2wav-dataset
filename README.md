@@ -1,8 +1,6 @@
 # Unofficial Lip2Wav Dataset Preprocessing Scripts
 
-[Lip2Wav](https://github.com/Rudrabha/Lip2Wav/) dataset is a large scale dataset for lip-to-speech synthesis.
-
-These scripts allow to only download and preprocess parts of the dataset, and runs faster. For example, to run only test for dl, you may simply specify `--splits test --speakers dl` for all the following steps.
+[Lip2Wav](https://github.com/Rudrabha/Lip2Wav/) dataset is a large scale dataset for lip-to-speech synthesis. This script allow to only download and preprocess parts of the dataset, and runs faster. For example, to run only test for dl, you may simply specify `--splits test --speakers dl` for all the following steps.
 
 ## Installation
 
@@ -22,13 +20,13 @@ lip2wav-dataset download --splits test --speakers dl
 
 This step automatically download the given speaker and split (i.e. train/val/test). If not specified, all speakers/splits will be downloaded.
 
-### 2. Split raw videos into intervals
+### 2. Cut raw videos into intervals
 
 ```
 lip2wav-dataset cut
 ```
 
-This will the videos into intervals.
+This cuts the videos into intervals.
 
 ### 3. Detect faces (optional)
 
@@ -52,9 +50,7 @@ This will merge all the `detection.csv` for each speaker/split to `detection/spe
 lip2wav-dataset prepare detection/dl-test.csv
 ```
 
-This generate frames (if step 3 is skipped), audios and spectrograms.
-
-Testing does not need spectrograms, specify the `--no-spec` flag to skip spectrogram generation.
+This generate frames (if step 3 is skipped), audios and spectrograms. Testing does not need spectrograms, specify the `--no-spec` flag to skip spectrogram generation.
 
 ```
 lip2wav-dataset prepare detection/dl-test.csv --no-spec
