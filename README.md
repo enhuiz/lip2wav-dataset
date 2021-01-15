@@ -20,7 +20,7 @@ Under any empty folder, run the following command:
 lip2wav-dataset download --splits test --speakers dl
 ```
 
-This step automatically download the given speaker and split (i.e. train/val/test). If not specified, all speakers/splits will be downloaded. This script support automatically downloading by default.
+This step automatically download the given speaker and split (i.e. train/val/test). If not specified, all speakers/splits will be downloaded. 
 
 ### 2. Split raw videos into intervals
 
