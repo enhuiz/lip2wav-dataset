@@ -9,17 +9,8 @@ from operator import itemgetter
 from pathlib import Path
 from itertools import product, count
 
-from utils import get_filelist
-
-ffmpeg_version = (
-    subprocess.check_output("ffmpeg -version", shell=True)
-    .decode("utf8")
-    .splitlines()[0]
-)
-
-assert (
-    "2.8.15" in ffmpeg_version
-), "The author sugguests to use ffmpeg==2.8.15, delete this assertion to run on other ffmpeg versions."
+from .utils import get_filelist
+from .audio import load_wav, melspectrogram, linearspectrogram
 
 
 def crop(frame, detection):
@@ -54,7 +45,7 @@ def prepare_video(mp4, detection):
             cv2.imwrite(str(out_dir(mp4, mkdir=True) / f"{frame_id}.jpg"), face)
 
 
-def prepare_audio(mp4, sample_rate):
+def prepare_audio(mp4, args):
     template = "ffmpeg -loglevel panic -y -i {} -ar {} -f wav {}"
     template2 = "ffmpeg -hide_banner -loglevel panic -threads 1 -y -i {} -async 1 -ac 1 -vn -acodec pcm_s16le -ar 16000 {}"
 
@@ -63,12 +54,22 @@ def prepare_audio(mp4, sample_rate):
     if speaker in ["hs", "eh", "dl"]:
         command = template2.format(mp4, wavpath)
     else:
-        command = template.format(mp4, sample_rate, wavpath)
+        command = template.format(mp4, args.sample_rate, wavpath)
     subprocess.call(command, shell=True)
+
+    if not args.no_spec:
+        wav = load_wav(wavpath, args.sample_rate)
+        spec = melspectrogram(wav, args)
+        lspec = linearspectrogram(wav, args)
+        np.savez_compressed(wavpath.with_name("mels.npz"), spec=spec, lspec=lspec)
 
 
 def prepare(detection, args):
-    df = pd.read_csv(detection)
+    try:
+        df = pd.read_csv(detection)
+    except Exception as e:
+        print(str(e) + " Skipped.")
+        return
     df["resolution"] = df["resolution"].apply(eval)
 
     mp4s = get_filelist(
@@ -76,27 +77,69 @@ def prepare(detection, args):
         *detection.stem.split("-"),
         "intervals/{youtube_id}/**/*.mp4",
     )
-    mp4s = [p for p in mp4s if not (out_dir(p) / "audio.wav").exists()]
+    mp4s = [p for p in mp4s if not (out_dir(p) / "mels.wav").exists()]
 
-    grouped_detection = dict(list(df.groupby(["youtube_id", "cut"])))
+    grouped = dict(list(df.groupby(["youtube_id", "cut"])))
 
     for mp4 in mp4s:
         youtube_id = mp4.parts[-2]
         cut = int(mp4.stem.split("-")[-1])
         index = (youtube_id, cut)
-        if index not in grouped_detection:
+        if index not in grouped:
             print(f"==> INFO: No face detected in {mp4}, skipped.")
             continue
-        prepare_video(mp4, grouped_detection[index])
-        prepare_audio(mp4, args.sample_rate)
+        prepare_video(mp4, grouped[index])
+        prepare_audio(mp4, args)
+
+
+def str2bool(s):
+    s = str(s).lower()
+    assert s in ["true", "false"]
+    return s == "true"
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("detections", type=Path, nargs="+")
     parser.add_argument("--root", type=Path, default="Dataset")
-    parser.add_argument("--sample-rate", type=int, default=16000)
+    parser.add_argument("--sample_rate", type=int, default=16000)
+    # spec
+    parser.add_argument("--no-spec", action="store_true")
+    parser.add_argument("--preemphasize", type=str2bool, default=True)
+    parser.add_argument("--preemphasis", type=float, default=0.97)
+    parser.add_argument("--hop_size", type=float, default=200)
+    parser.add_argument("--win_size", type=float, default=800)
+    parser.add_argument("--n_fft", type=float, default=800)
+    parser.add_argument("--fmax", type=int, default=7600)
+    parser.add_argument("--fmin", type=int, default=55)
+    parser.add_argument("--num_mels", type=int, default=80)
+    parser.add_argument("--signal_normalization", type=str2bool, default=True)
+    parser.add_argument("--min_level_db", type=int, default=-100)
+    parser.add_argument("--ref_level_db", type=int, default=20)
+    parser.add_argument("--max_abs_value", type=float, default=4.0)
+    parser.add_argument("--use_lws", type=str2bool, default=False)
+    parser.add_argument("--symmetric_mels", type=str2bool, default=True)
+    parser.add_argument(
+        "--allow_clipping_in_normalization",
+        type=str2bool,
+        default=True,
+    )
     args = parser.parse_args()
+
+    print(args)
+
+    ffmpeg_version = (
+        subprocess.check_output("ffmpeg -version", shell=True)
+        .decode("utf8")
+        .splitlines()[0]
+    )
+
+    if "2.8.15" not in ffmpeg_version:
+        msg = f"The author sugguests to use ffmpeg==2.8.15, but got: \n{ffmpeg_version}.\nDo you want to continue? (y/n) "
+        if input(msg).lower() != "y":
+            print("Quiting ...")
+            exit()
+
     for detection in tqdm.tqdm(args.detections):
         prepare(detection, args)
 

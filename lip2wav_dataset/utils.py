@@ -18,7 +18,7 @@ def working_directory(new, mkdir=False):
         os.chdir(old)
 
 
-def create_parser_with_default_arguments(speaker=True, split=True):
+def create_parser(speaker=True, split=True):
     speakers = ["chem", "chess", "dl", "eh", "hs"]
     splits = ["train", "val", "test"]
     parser = argparse.ArgumentParser()

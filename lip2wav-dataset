@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+
+cmd=$1
+
+if [ -z $cmd ]; then
+    echo "lip2wav-dataset <download|cut|detect|collect|prepare> ..."
+    exit
+fi
+
+function cut() {
+    if [ $# != 1 ]; then
+        echo "lip2wav-dataset cut <data-root>"
+        echo -e "\te.g. lip2wav-dataset cut ./Dataset"
+        echo -e "\tThis command automatically cuts all videos. No need to specify speakers or splits."
+        exit
+    fi
+
+    root=$1
+
+    for speaker in chem chess dl eh hs; do
+        vdir=$root/$speaker/videos
+        if [ -d $vdir ]; then
+            if find $vdir -name "*.mp4" | read; then
+                for mp4 in $vdir/*; do
+                    id=$(basename $mp4 .mp4)
+                    idir=$root/$speaker/intervals/$id
+                    if [ -d $idir ]; then
+                        echo $mp4 is skipped as it seems already cut.
+                        continue
+                    fi
+                    echo Cutting $mp4 ...
+                    mkdir -p $idir
+                    ffmpeg -loglevel panic -i $mp4 -acodec copy -f segment -vcodec copy \
+                        -reset_timestamps 1 -map 0 -segment_time 30 "$idir/cut-%d.mp4"
+                done
+            fi
+        fi
+    done
+}
+
+case $cmd in
+    cut)
+        cut ${@:2}
+        ;;
+    download | detect | collect | prepare)
+        python -m lip2wav_dataset.$cmd ${@:2}
+        ;;
+    *)
+        echo Unknown command "$cmd".
+        ;;
+esac

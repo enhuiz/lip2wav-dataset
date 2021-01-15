@@ -6,10 +6,7 @@ from itertools import product
 from collections import defaultdict
 from pathlib import Path
 
-from utils import create_parser_with_default_arguments, get_filelist
-
-parser = create_parser_with_default_arguments()
-args = parser.parse_args()
+from .utils import create_parser, get_filelist
 
 
 def get_resolution(path):
@@ -63,16 +60,23 @@ def get_detection_df(root, speaker, split):
     return df
 
 
-pbar = tqdm.tqdm(list(product(args.speakers, args.splits)))
-for speaker, split in pbar:
-    pbar.set_description_str(f"Collecting {speaker}/{split} ...")
-    try:
-        bdf = get_detection_df(args.root, speaker, split)
-    except FileNotFoundError as e:
-        print(f"{e} Skipped.")
-        continue
-    rdf = get_resolution_df(args.root, speaker, split)
-    df = pd.merge(bdf, rdf, on="youtube_id")
-    path = Path(f"detection/{speaker}-{split}.csv")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, index=None)
+def main():
+    parser = create_parser()
+    args = parser.parse_args()
+    pbar = tqdm.tqdm(list(product(args.speakers, args.splits)))
+    for speaker, split in pbar:
+        pbar.set_description_str(f"Collecting {speaker}/{split} ...")
+        try:
+            bdf = get_detection_df(args.root, speaker, split)
+        except FileNotFoundError as e:
+            print(f"{e} Skipped.")
+            continue
+        rdf = get_resolution_df(args.root, speaker, split)
+        df = pd.merge(bdf, rdf, on="youtube_id")
+        path = Path(f"detection/{speaker}-{split}.csv")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(path, index=None)
+
+
+if __name__ == "__main__":
+    main()

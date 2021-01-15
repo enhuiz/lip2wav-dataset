@@ -1,3 +1,5 @@
+import pkg_resources
+import shutil
 import numpy as np
 import soundfile
 import librosa
@@ -8,7 +10,7 @@ import sys
 from itertools import product
 from pathlib import Path
 
-from utils import working_directory, create_parser_with_default_arguments
+from .utils import working_directory, create_parser
 
 
 def get_todo_list(split):
@@ -33,14 +35,24 @@ def download(todo):
         print(e)
 
 
+def create_datalist(root, speaker, split):
+    tgt = (root / speaker / split).with_suffix(".txt")
+    if not tgt.exists():
+        tgt.parent.mkdir(parents=True, exist_ok=True)
+        src = pkg_resources.resource_filename(__name__, f"data/{speaker}/{split}.txt")
+        shutil.copy(src, tgt)
+
+
 def main():
-    parser = create_parser_with_default_arguments()
+    parser = create_parser()
     args = parser.parse_args()
 
     pairs = sorted(product(args.speakers, args.splits))
     np.random.shuffle(pairs)
     pbar = tqdm.tqdm(pairs)
+
     for speaker, split in pbar:
+        create_datalist(args.root, speaker, split)
         with working_directory(args.root / speaker, mkdir=True):
             todo = get_todo_list(split)
             if todo:

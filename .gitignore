@@ -4,3 +4,4 @@ Dataset/*/*
 !Dataset/*/*.txt
 Dataset/*/todo.txt
 tmp*
+segment.py

@@ -11,9 +11,9 @@ from pathlib import Path
 from functools import partial
 from itertools import product
 from more_itertools import chunked
-from easyfd import s3fd
+from efd import s3fd
 
-from utils import create_parser_with_default_arguments, get_filelist
+from .utils import create_parser, get_filelist
 
 
 def crop_frames(frames, speaker):
@@ -148,7 +148,7 @@ def detect(model, mp4, args):
 
 
 def main():
-    parser = create_parser_with_default_arguments()
+    parser = create_parser()
     parser.add_argument(
         "--batch_size",
         default=16,
