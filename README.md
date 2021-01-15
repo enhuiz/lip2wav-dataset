@@ -20,7 +20,7 @@ Under any empty folder, run the following command:
 lip2wav-dataset download --splits test --speakers dl
 ```
 
-This step automatically download the given speaker and split (i.e. train/val/test). If not specified, all speakers/splits will be downloaded. 
+This step automatically download the given speaker and split (i.e. train/val/test). If not specified, all speakers/splits will be downloaded.
 
 ### 2. Split raw videos into intervals
 
@@ -46,13 +46,19 @@ lip2wav-dataset collect --splits test --speakers dl
 
 This will merge all the `detection.csv` for each speaker/split to `detection/speaker-split.csv`.
 
-### 4. Prepare
+### 4. Prepare the rest
 
 ```
 lip2wav-dataset prepare detection/dl-test.csv
 ```
 
 This generate frames (if step 3 is skipped), audios and spectrograms.
+
+Testing does not need spectrograms, specify the `--no-spec` flag to skip spectrogram generation.
+
+```
+lip2wav-dataset prepare detection/dl-test.csv --no-spec
+```
 
 ## Detections
 
