@@ -141,10 +141,16 @@ def detect(model, mp4, args):
     if bboxes:
         df = pd.DataFrame(bboxes)
         df["frame_id"] = df["frame_id"].astype(int)
+        del df["score"]
     else:
         # nothing is detected, create an empty csv
         df = pd.DataFrame()
-    df.to_csv(out_dir(mp4, True) / "detection.csv", index=None)
+
+    df.to_csv(
+        out_dir(mp4, True) / "detection.csv",
+        index=None,
+        float_format="%.4f",
+    )
 
 
 def main():
