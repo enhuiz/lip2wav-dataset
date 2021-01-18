@@ -1,6 +1,10 @@
 # Unofficial Lip2Wav Dataset Preprocessing Scripts
 
-[Lip2Wav](https://github.com/Rudrabha/Lip2Wav/) dataset is a large scale dataset for lip-to-speech synthesis. This script allow to only download and preprocess parts of the dataset, and runs faster. For example, to run only test for dl, you may simply specify `--splits test --speakers dl` for all the following steps.
+[Lip2Wav](https://github.com/Rudrabha/Lip2Wav/) dataset is a large scale lip-to-speech synthesis dataset. This script allows to download and preprocess parts of the dataset, and runs faster. For example, to run only test for dl, you may simply specify `--splits test --speakers dl` for all the following steps.
+
+## Requirements
+
+This script requires `ffmpeg` and has been tested on Ubuntu 20.04.1 LTS.
 
 ## Installation
 
@@ -12,28 +16,28 @@ pip install git+https://github.com/enhuiz/lip2wav-dataset.git
 
 ### 1. Download raw videos from YouTube
 
-Under any empty folder, run the following command:
+Under an empty folder, run the following command:
 
 ```
 lip2wav-dataset download --splits test --speakers dl
 ```
 
-This step automatically download the given speaker and split (i.e. train/val/test). If not specified, all speakers/splits will be downloaded.
+This step automatically download the specified speaker and split (i.e. train/val/test). If not specified, all speakers/splits will be downloaded.
 
 ### 2. Cut raw videos into intervals
 
 ```
-lip2wav-dataset cut
+lip2wav-dataset cut ./Dataset
 ```
 
-This cuts the videos into intervals.
+This cuts the all existing videos into intervals, no need to specify speakers and splits.
 
 ### 3. Detect faces (optional)
 
 Note that if you have downloaded the detection files, this step can be skipped.
 
 ```
-lip2wav-datsaet detect --splits test --speakers dl
+lip2wav-dataset detect --splits test --speakers dl
 ```
 
 Detect faces from the intervals, generate the cropped frames to the folder under `Dataset/preprocessed` and also a `detection.csv` in the same folder.
@@ -42,7 +46,7 @@ Detect faces from the intervals, generate the cropped frames to the folder under
 lip2wav-dataset collect --splits test --speakers dl
 ```
 
-This will merge all the `detection.csv` for each speaker/split to `detection/speaker-split.csv`.
+The collection command merges all the `detection.csv` for each speaker/split to `detection/{speaker}-{split}.csv`, which you can share with other people.
 
 ### 4. Prepare the rest
 
@@ -50,7 +54,7 @@ This will merge all the `detection.csv` for each speaker/split to `detection/spe
 lip2wav-dataset prepare detection/dl-test.csv
 ```
 
-This generate frames (if step 3 is skipped), audios and spectrograms. Testing does not need spectrograms, specify the `--no-spec` flag to skip spectrogram generation.
+This command generates frames (if step 3 is skipped), audios and spectrograms. Testing does not requires spectrograms, specify the `--no-spec` flag to skip spectrogram for faster preparation:
 
 ```
 lip2wav-dataset prepare detection/dl-test.csv --no-spec
@@ -58,8 +62,8 @@ lip2wav-dataset prepare detection/dl-test.csv --no-spec
 
 ## Detections
 
-The detection results for test set can be downloaded [here](https://github.com/Rudrabha/Lip2Wav/files/5815157/detection.zip).
+The results of detection for the test sets can be downloaded [here](https://github.com/Rudrabha/Lip2Wav/files/5815157/detection.zip).
 
 ## Credits
 
-- The original project of [Lip2Wav](https://github.com/Rudrabha/Lip2Wav/)
+- The original repo of [Lip2Wav](https://github.com/Rudrabha/Lip2Wav/).
