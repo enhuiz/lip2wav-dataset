@@ -10,7 +10,6 @@ from pathlib import Path
 from itertools import product, count
 
 from .utils import get_filelist
-from .audio import load_wav, melspectrogram, linearspectrogram
 
 
 def crop(frame, detection):
@@ -58,6 +57,11 @@ def prepare_audio(mp4, args):
     subprocess.call(command, shell=True)
 
     if not args.no_spec:
+        try:
+            load_wav
+        except:
+            from .audio import load_wav, melspectrogram, linearspectrogram
+
         wav = load_wav(wavpath, args.sample_rate)
         spec = melspectrogram(wav, args)
         lspec = linearspectrogram(wav, args)
@@ -77,7 +81,16 @@ def prepare(detection, args):
         *detection.stem.split("-"),
         "intervals/{youtube_id}/**/*.mp4",
     )
-    mp4s = [p for p in mp4s if not (out_dir(p) / "mels.wav").exists()]
+
+    youtube_ids = set(df["youtube_id"])
+
+    mp4s = list(
+        filter(
+            lambda p: not (out_dir(p) / "audio.wav").exists()
+            and p.parent.name in youtube_ids,
+            mp4s,
+        )
+    )
 
     grouped = dict(list(df.groupby(["youtube_id", "cut"])))
 
